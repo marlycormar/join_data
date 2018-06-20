@@ -15,14 +15,14 @@ library(openxlsx)
 
 ```{r joining}
 
-# Read CSV into R
+# Read CSV files
 data1 <- read.xlsx("data/QMB3250_1_2014-01-13_2014-01-19.xlsx")
 data2 <- read.xlsx("data/QMB3250_1_2014-01-20_2014-01-26.xlsx")
 
-#MyData <- read.csv(file="c:/TheDataIWantToReadIn.csv", header=TRUE, sep=",")
-
+# Merge data
 total <- merge(data1, data2, by=c("USER_NAME","UFID", "Section_No"), suffixes = c(".Week1",".Week2"))
 
+# Write joined data
 write.xlsx(total, file="output/output.xlsx", sheetName="Joined forms")
 
 ```
