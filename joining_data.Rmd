@@ -6,25 +6,24 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+``` {r install_packages}
+install.packages('openxlsx')
+#library(openxlsx)
 ```
 
-## Including Plots
+```{r joining}
 
-You can also embed plots, for example:
+# Read CSV into R
+data1 <- read.xlsx("data/QMB3250_1_2014-01-13_2014-01-19.xlsx")
+data2 <- read.xlsx("data/QMB3250_1_2014-01-20_2014-01-26.xlsx")
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+#MyData <- read.csv(file="c:/TheDataIWantToReadIn.csv", header=TRUE, sep=",")
+
+total <- merge(data1, data2, by=c("USER_NAME","UFID", "Section_No"))
+
+write.xlsx(total, file="output/output.xlsx", sheetName="USA Arrests")
+
 ```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
