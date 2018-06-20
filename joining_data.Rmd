@@ -10,8 +10,7 @@ knitr::opts_chunk$set(echo = FALSE)
 ```
 
 ``` {r install_packages}
-install.packages('openxlsx')
-#library(openxlsx)
+library(openxlsx)
 ```
 
 ```{r joining}
@@ -22,8 +21,8 @@ data2 <- read.xlsx("data/QMB3250_1_2014-01-20_2014-01-26.xlsx")
 
 #MyData <- read.csv(file="c:/TheDataIWantToReadIn.csv", header=TRUE, sep=",")
 
-total <- merge(data1, data2, by=c("USER_NAME","UFID", "Section_No"))
+total <- merge(data1, data2, by=c("USER_NAME","UFID", "Section_No"), suffixes = c(".Week1",".Week2"))
 
-write.xlsx(total, file="output/output.xlsx", sheetName="USA Arrests")
+write.xlsx(total, file="output/output.xlsx", sheetName="Joined forms")
 
 ```
