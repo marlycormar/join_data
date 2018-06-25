@@ -1,15 +1,13 @@
 ---
 title: "Joining Data"
 author: "Marly Cormar"
-date: "6/20/2018"
+date: "6/25/2018"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 
 knitr::opts_chunk$set(echo = FALSE, message=FALSE)
-
-# Assumptions: at least two files
 
 ```
 
@@ -44,4 +42,5 @@ output <- join_all(data, by=c("USER_NAME","UFID", "Section_No"), type='left')
 write.xlsx(output, file="output/output.xlsx", sheetName="Joined forms")
 
 cat("#### - The output has been generated")
+
 ```
