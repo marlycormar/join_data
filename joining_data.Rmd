@@ -6,25 +6,42 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
+
 knitr::opts_chunk$set(echo = FALSE, message=FALSE)
+
+# Assumptions: at least two files
+
 ```
 
 ``` {r open_libraries}
+
 library(openxlsx)
-library(dplyr)
+library(gtools)
+library(plyr)
+
 ```
 
-```{r joining, results='asis'}
+```{r joining_data, results='asis'}
 
-# Read CSV files
-data1 <- read.xlsx("data/QMB3250_1_2014-01-13_2014-01-19.xlsx")
-data2 <- read.xlsx("data/QMB3250_1_2014-01-20_2014-01-26.xlsx")
+# Read CSV files in order
+files <- c(dir("./data/", full.names = FALSE, pattern = ".xlsx$"))
+files <- mixedsort(files, decreasing = TRUE)
 
-# Join data
-total <- full_join(data1, data2, by=c("USER_NAME","UFID", "Section_No"), suffix = c(".Week1",".Week2"))
+#dates <- str_extract(list_files, "\\d{4}-\\d{2}-\\d{2}")
+
+# Change column names to reflect week number
+data <-list()
+my_sep <- "_week"
+for(i in 1:length(files)){
+  data[[i]] <- read.xlsx(paste("./data/", files[i], sep=""))
+  names(data[[i]]) <- c("USER_NAME", "UFID", "Section_No", paste("Logins", i, sep = my_sep) , paste("Hours", i, sep = my_sep), paste("PAGEVIEW", i, sep = my_sep), paste("SUBMISSION", i, sep = my_sep), paste("FILESVIEW", i, sep = my_sep), paste("CONVERSATION", i, sep = my_sep))
+}
+
+# Generate joined data
+output <- join_all(data, by=c("USER_NAME","UFID", "Section_No"), type='left')
 
 # Write joined data
-write.xlsx(total, file="output/output.xlsx", sheetName="Joined forms")
+write.xlsx(output, file="output/output.xlsx", sheetName="Joined forms")
 
 cat("#### - The output has been generated")
 ```
