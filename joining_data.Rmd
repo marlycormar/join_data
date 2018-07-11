@@ -21,26 +21,40 @@ library(plyr)
 
 ```{r joining_data, results='asis'}
 
-# Read CSV files in order
-files <- c(dir("./data/", full.names = FALSE, pattern = ".xlsx$"))
-files <- mixedsort(files, decreasing = TRUE)
+# Set data directory
+directory <- "./data/"
+folders <- list.files(directory)
 
-#dates <- str_extract(list_files, "\\d{4}-\\d{2}-\\d{2}")
+for(folder in folders){
+  # Set up current directory
+  cur_dir <- paste0(directory, folder)
+  cur_dir <- paste0(cur_dir, "/")
 
-# Change column names to reflect week number
-data <-list()
-my_sep <- "_week"
-for(i in 1:length(files)){
-  data[[i]] <- read.xlsx(paste("./data/", files[i], sep=""))
-  names(data[[i]]) <- c("USER_NAME", "UFID", "Section_No", paste("Logins", i, sep = my_sep) , paste("Hours", i, sep = my_sep), paste("PAGEVIEW", i, sep = my_sep), paste("SUBMISSION", i, sep = my_sep), paste("FILESVIEW", i, sep = my_sep), paste("CONVERSATION", i, sep = my_sep))
+  # Read CSV files in order
+  files <- c(dir(cur_dir, full.names = FALSE, pattern = ".xlsx$"))
+  files <- mixedsort(files, decreasing = TRUE)
+
+  # Set output filename using input data filenames
+  #output_file <- paste0("output/", sub("_.*$", "", files[1]))
+  output_file <- paste0("output/", folder)
+  output_file <- paste0(output_file, ".xlsx")
+
+  # Change column names to reflect week number
+  data <-list()
+  my_sep <- "_week"
+  for(i in 1:length(files)){
+    data[[i]] <- read.xlsx(paste(cur_dir, files[i], sep=""))
+    names(data[[i]]) <- c("USER_NAME", "UFID", "Section_No", paste("Logins", i, sep = my_sep) , paste("Hours", i, sep = my_sep), paste("PAGEVIEW", i, sep = my_sep), paste("SUBMISSION", i, sep = my_sep), paste("FILESVIEW", i, sep = my_sep), paste("CONVERSATION", i, sep = my_sep))
+  }
+
+  # Generate joined data
+  output <- join_all(data, by=c("USER_NAME","UFID", "Section_No"), type='left')
+
+  # Write joined data
+  write.xlsx(output, file=output_file, sheetName="Joined forms")
+
 }
-
-# Generate joined data
-output <- join_all(data, by=c("USER_NAME","UFID", "Section_No"), type='left')
-
-# Write joined data
-write.xlsx(output, file="output/output.xlsx", sheetName="Joined forms")
-
+# Print when done
 cat("#### - The output has been generated")
 
 ```
