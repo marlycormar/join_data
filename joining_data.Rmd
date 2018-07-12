@@ -19,16 +19,19 @@ library(plyr)
 
 ```
 
+
 ```{r joining_data, results='asis'}
 
 # Set data directory
-directory <- "./data/"
+directory <- "./data"
 folders <- list.files(directory)
+
+# Instantiate list of corrupted files
+corrupt_list <- list()
 
 for(folder in folders){
   # Set up current directory
-  cur_dir <- paste0(directory, folder)
-  cur_dir <- paste0(cur_dir, "/")
+  cur_dir <- file.path(directory, folder)
 
   # Read CSV files in order
   files <- c(dir(cur_dir, full.names = FALSE, pattern = ".xlsx$"))
@@ -36,25 +39,43 @@ for(folder in folders){
 
   # Set output filename using input data filenames
   #output_file <- paste0("output/", sub("_.*$", "", files[1]))
-  output_file <- paste0("output/", folder)
-  output_file <- paste0(output_file, ".xlsx")
+  output_file <- file.path("output", paste0(folder, ".xlsx"))
 
   # Change column names to reflect week number
   data <-list()
   my_sep <- "_week"
+  join_forms <- TRUE
+
   for(i in 1:length(files)){
-    data[[i]] <- read.xlsx(paste(cur_dir, files[i], sep=""))
-    names(data[[i]]) <- c("USER_NAME", "UFID", "Section_No", paste("Logins", i, sep = my_sep) , paste("Hours", i, sep = my_sep), paste("PAGEVIEW", i, sep = my_sep), paste("SUBMISSION", i, sep = my_sep), paste("FILESVIEW", i, sep = my_sep), paste("CONVERSATION", i, sep = my_sep))
+    data[[i]] <- read.xlsx(file.path(cur_dir, files[i]))
+    if(nrow(data[[i]]) != 0 && !all(data[[i]][4:9] == 0)) {
+      names(data[[i]]) <- c("USER_NAME", "UFID", "Section_No", paste("Logins", i, sep = my_sep) , paste("Hours", i, sep = my_sep), paste("PAGEVIEW", i, sep = my_sep), paste("SUBMISSION", i, sep = my_sep), paste("FILESVIEW", i, sep = my_sep), paste("CONVERSATION", i, sep = my_sep))
+    }
+    else{
+      join_forms <- FALSE
+      break
+    }
   }
 
-  # Generate joined data
-  output <- join_all(data, by=c("USER_NAME","UFID", "Section_No"), type='left')
+  if(join_forms){
+    # Generate joined data
+    output <- join_all(data, by=c("USER_NAME","UFID", "Section_No"), type='left')
 
-  # Write joined data
-  write.xlsx(output, file=output_file, sheetName="Joined forms")
+    # Write joined data
+    write.xlsx(output, file=output_file, sheetName="Joined forms")
+  }
+  else {
+    # Update corrupt file list
+    corrupt_list <- c(corrupt_list, folder)
+  }
 
 }
+
+# Write corrupt file list to an xlsx file
+write.xlsx(unlist(corrupt_list), "output/corrupt_list.xlsx")
+
 # Print when done
 cat("#### - The output has been generated")
 
 ```
+
