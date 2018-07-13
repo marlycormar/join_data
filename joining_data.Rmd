@@ -55,8 +55,9 @@ my_sep <- "_week"
 
 # Set up files' statistics
 stats_filename <- file.path(output_dir, paste0("statistics", ".xlsx"))
-stats_colnames <- list("Filename", "Row Count", "Dist. Row Count", "Dist. UFIDs",
-                 "Dist. Sections", "Login Stats", "Hours Stats","Submission Stats", "Filesview Stats", "Conversation Stats")
+stats_colnames <- list("Filename", "Row Count", "Dist. UFIDs", "Dist. Sections",
+                       "Login Stats", "Hours Stats", "Pageview Stats",
+                       "Submission Stats", "Filesview Stats", "Conversation Stats")
 statistics <- data.frame()
 
 for(folder in folders){
