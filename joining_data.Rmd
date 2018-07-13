@@ -26,7 +26,6 @@ pacman::p_load(
 ``` {r functions}
 
 get_summary <- function(column){
-  column = 10
   min <- paste0("min = ", min(column))
   max <- paste0("max = ", max(column))
   st_dev <- paste0("sd = ", sd(column))
