@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = FALSE, message=FALSE)
 ```
 
 ``` {r open_libraries}
+
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(
   gtools,
@@ -22,41 +23,93 @@ pacman::p_load(
 ```
 
 
+``` {r functions}
+
+get_summary <- function(column){
+  column = 10
+  min <- paste0("min = ", min(column))
+  max <- paste0("max = ", max(column))
+  st_dev <- paste0("sd = ", sd(column))
+  return (paste(c(min, max, st_dev), collapse=","))
+}
+
+clear_output_dir <- function(output_dir){
+  unlink(output_dir, force = FALSE)
+}
+
+```
+
+
 ```{r joining_data, results='asis'}
 
-# Set data directorymkd
-directory <- "./data/"
-folders <- dir(directory, pattern = '^[A-Z]{3}.*[0-9]{3}$', full.names = FALSE, recursive = FALSE, no..=TRUE)
+# Set up data input and output directories
+data_dir <- "./data"
+output_dir <- "./output"
+folders <- dir(data_dir, pattern = '^[A-Z]{3}.*[0-9]{3}$', full.names = FALSE, recursive = FALSE, no..=TRUE)
 
-folders
+# Clear output dir
+clear_output_dir(paste0(output_dir, "/*"))
+
+# Set up column postfix
+my_sep <- "_week"
+
+# Set up files' statistics
+stats_filename <- file.path(output_dir, paste0("statistics", ".xlsx"))
+stats_colnames <- list("Filename", "Row Count", "Dist. Row Count", "Dist. UFIDs",
+                 "Dist. Sections", "Login Stats", "Hours Stats","Submission Stats", "Filesview Stats", "Conversation Stats")
+statistics <- data.frame()
+
 for(folder in folders){
+
   # Set up current directory
-  cur_dir <- file.path(directory, folder)
+  cur_dir <- file.path(data_dir, folder)
 
   # Read CSV files in order
   files <- c(dir(cur_dir, pattern = '^[A-Z]{3}.*xlsx$', full.names = FALSE))
   files <- mixedsort(files, decreasing = TRUE)
 
   # Set output filename using input data filenames
-  #output_file <- paste0("output/", sub("_.*$", "", files[1]))
-  output_file <- file.path("output", paste0(folder, ".xlsx"))
+  output_filename <- file.path(output_dir, paste0(folder, ".xlsx"))
 
-  # Change column names to reflect week number
+  # Initialize data holder
   data <-list()
-  my_sep <- "_week"
 
   for(i in 1:length(files)){
     data[[i]] <- read.xlsx(file.path(cur_dir, files[i]))
+
+    data_stats <- list(files[i], # Get filename
+                       length(data[[i]]$Logins), # Get number of rows on column 'Login'
+                       length(unique(data[[i]]$UFID)), # Get count of distict 'UFID' rows
+                       length(unique(data[[i]]$Section_No)), # Get count of distict 'Section_No' rows
+                       get_summary(data[[i]]$Login), # Get summary for 'Login'
+                       get_summary(data[[i]]$Hours), # Get summary for 'Hours'
+                       get_summary(data[[i]]$PAGEVIEW), # Get summary for 'PAGEVIEW'
+                       get_summary(data[[i]]$SUBMISSION), # Get summary for 'SUBMISSION'
+                       get_summary(data[[i]]$FILESVIEW), # Get summary for 'FILESVIEW'
+                       get_summary(data[[i]]$CONVERSATION) # Get summary for 'CONVERSATION'
+    )
+
+    if(empty(statistics)){
+      statistics <- data.frame(data_stats, stringsAsFactors = FALSE)
+      colnames(statistics) <- stats_colnames
+    }
+    else {
+      statistics <- rbind(statistics, data_stats)
+    }
+
     names(data[[i]]) <- c("USER_NAME", "UFID", "Section_No", paste("Logins", i, sep = my_sep) , paste("Hours", i, sep = my_sep), paste("PAGEVIEW", i, sep = my_sep), paste("SUBMISSION", i, sep = my_sep), paste("FILESVIEW", i, sep = my_sep), paste("CONVERSATION", i, sep = my_sep))
+
   }
 
   # Generate joined data
   output <- join_all(data, by=c("USER_NAME","UFID", "Section_No"), type='left')
 
   # Write joined data
-  write.xlsx(output, file=output_file, sheetName="Joined forms")
-
+  write.xlsx(output, file=output_filename, sheetName="Joined forms")
 }
+
+# Set up statistics file
+write.xlsx(statistics, file=stats_filename, sheetName="Statistics")
 
 # Print when done
 cat("#### - The output has been generated")
